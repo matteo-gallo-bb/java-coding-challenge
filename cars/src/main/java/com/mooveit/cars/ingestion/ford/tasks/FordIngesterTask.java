@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ import java.nio.file.Paths;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor
 public class FordIngesterTask {
 
   public static final String INGESTED_FILE_EXTENSION = ".ingested";
@@ -34,10 +33,10 @@ public class FordIngesterTask {
   private final FordCatalogueXmlParser fordCatalogueXmlParser;
   private final CarMapper carMapper;
   private final MappedFordPersister mappedFordPersister;
-
-  @Setter(onMethod_ = @Value("${cars.ford.ingester.root-path:ford/}"))
+  @Setter(onMethod_ = @Value("${cars.ford.ingester.root-path:" + FORD_INGESTER_DEFAULT_ROOT_PATH + "}"))
   @Getter
-  private String fordIngesterBasePathString = FORD_INGESTER_DEFAULT_ROOT_PATH;
+  private String fordIngesterBasePathString;
+
   @Getter
   private Path fordIngesterBasePath;
 
@@ -48,7 +47,7 @@ public class FordIngesterTask {
       throw new IllegalStateException(
               "Error during FordIngesterTask initialization. The base path configured doesn't exist or is not a folder! "
                       + "The base path found is: "
-                      + fordIngesterBasePathString);
+                      + fordIngesterBasePath.toAbsolutePath());
     }
   }
 

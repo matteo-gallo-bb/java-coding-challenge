@@ -12,11 +12,9 @@ import com.mooveit.cars.ingestion.ford.xml.model.FordWheels;
 import com.mooveit.cars.repositories.CarRepository;
 import com.mooveit.cars.repositories.EngineRepository;
 import com.mooveit.cars.repositories.WheelsRepository;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -24,7 +22,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -38,15 +35,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.mooveit.cars.ingestion.ford.tasks.FordIngesterTask.INGESTED_FILE_EXTENSION;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class CarsApplicationTests {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
     @Autowired
     private EngineRepository engineRepository;
     @Autowired
@@ -62,7 +56,7 @@ public class CarsApplicationTests {
     @Autowired
     private CarMapper carMapper;
 
-    @After
+    @AfterEach
     public void cleanUp() {
         carRepository.deleteByParentModelIsNull();
         engineRepository.deleteAll();
@@ -111,6 +105,7 @@ public class CarsApplicationTests {
         fordFiesta.addSubModel(fordFiesta2017);
         // testing cascade persist
         fordFiesta = carRepository.save(fordFiesta);
+        assertNotNull(fordFiesta.getId());
         fordFiesta2017 = fordFiesta.getSubModels().get(0);
 
         Car fordFiestaST =
@@ -155,9 +150,10 @@ public class CarsApplicationTests {
 
     @Transactional
     @Test
-    public void fordIngesterTaskTest() throws IOException {
-        // Setting the base path to the temp folder
-        Path basePath = folder.newFolder("ford").toPath();
+    public void fordIngesterTaskTest(@TempDir Path tempDirectory) throws IOException {
+        // Setting the base path to the temp directory
+        Path basePath = tempDirectory.resolve("ford");
+        Files.createDirectory(basePath);
         fordIngesterTask.setFordIngesterBasePathString(basePath.toString());
         fordIngesterTask.init();
         // Copying the for example in the temp folder
